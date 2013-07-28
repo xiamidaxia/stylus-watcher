@@ -1,0 +1,5 @@
+{
+	"projectPath": "E:/Dropbox/root/kyw-project/webapp/static",
+	"configPath": "E:/Dropbox/root/kyw-project/webapp/static/common/config.styl",
+	"ignores": [".git", ".idea","config.styl","sea-modules","libs"]
+}

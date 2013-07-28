@@ -1,0 +1,10 @@
+{
+	"name": "webfront-watcher",
+	"version": "0.0.1",
+	"dependencies": {
+		"stylus": "*",
+		"nib": "*"
+	},
+	"devDependencies": {
+	}
+}
