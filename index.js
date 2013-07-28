@@ -1,6 +1,6 @@
 var path = require('path')
     ,fs = require('fs')
-    ,ls = require('./ls').ls
+    ,ls = require('./utils').ls
     ,_config //配置json
     ,stylus = require('stylus')
     ,nib = require('nib')
@@ -20,23 +20,9 @@ function renderAllStylus() {
 function renderStylus(aPath) {
     if(path.extname(aPath) === '.styl') {
         var cssFilePath = path.dirname(aPath) + path.sep + path.basename(aPath, '.styl') + ".css"
-        //console.log('compile ' + aPath)
-        /**
-        var stylusBin = path.normalize(_config.stylus)
-        var compile = spawn(stylusBin, [aPath,'--include', nib.path])
-        compile.stdout.on('data', function (data) {
-          console.log('stdout: ' + data);
-        });
-        compile.stderr.on('data', function (data) {
-          console.log('stderr: ' + data);
-        });
-        compile.on('close', function (code) {
-          console.log('child process exited with code ' + code);
-        });
-        **/
-
-        fs.readFile(aPath, function(err, data) {
-            if(err) return //截断 todo
+        var data = fs.readFileSync(aPath)
+        //fs.readFile(aPath, function(err, data) {
+        //   if(err) return //截断 todo
             stylus(data.toString())
                 .set('filename', aPath)
                 .include(nib.path)
@@ -49,7 +35,7 @@ function renderStylus(aPath) {
                         console.log('compile ' + aPath)
                     })
                 })
-        })
+        //})
     }
 }
 /**
