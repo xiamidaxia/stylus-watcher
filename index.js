@@ -7,6 +7,7 @@ var path = require('path')
     ,spawn = require('child_process').spawn
     ,stylusCache = {} //缓存 stylus文件及对应的import依赖
     ,watchDirCache = [] //所有已经监听的文件夹
+
 //read config file
 
 function renderAllStylus() {
