@@ -30,10 +30,13 @@ function renderStylus(aPath) {
                 //.import('nib')
                 .import(_config.configPath)
                 .render(function(err, cssStr){
-                    if(err) throw err
+                    if(err){
+                        console.log(err);
+                        return;
+                    }
                     fs.writeFile(cssFilePath, cssStr, function(err){
                         if(err) throw err
-                        console.log('compile ' + aPath)
+                        console.log('compile ' + (new Date().toISOString().replace(/.*T|Z/g,'')) + ' ' + aPath)
                     })
                 })
         //})
