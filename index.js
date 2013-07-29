@@ -31,7 +31,8 @@ function renderStylus(aPath) {
                 .import(_config.configPath)
                 .render(function(err, cssStr){
                     if(err){
-                        console.log(err);
+                        console.log(err.name);
+                        console.log(err.message)
                         return;
                     }
                     fs.writeFile(cssFilePath, cssStr, function(err){
