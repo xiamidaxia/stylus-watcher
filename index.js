@@ -143,10 +143,10 @@ function watchConfig() {
 }
 function init() {
     _config = getConfig()
-    //renderAllStylus()
     cacheAllStylus()
     watchAllDir()
     watchConfig()
+    renderAllStylus() //初始化时候先编译所有
     //watchDir(_config.projectPath)
     return //todo
 }
