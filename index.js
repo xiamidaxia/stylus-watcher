@@ -125,11 +125,21 @@ function watchDir(dirPath, cb) {
         })
     })
 }
+/**
+ * 监听config文件，config文件改变时候编译所有
+ */
+function watchConfig() {
+    fs.watchFile(_config.configPath, function(){
+        console.log('change config styl, ready to compile all stylus ...')
+        renderAllStylus()
+    })
+}
 function init() {
     _config = getConfig()
     //renderAllStylus()
     cacheAllStylus()
     watchAllDir()
+    watchConfig()
     //watchDir(_config.projectPath)
     return //todo
 }
