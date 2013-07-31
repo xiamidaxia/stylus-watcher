@@ -52,7 +52,7 @@ function cacheAllStylus() {
     ls(_config.projectPath, function(relPath){
         cacheStylus(relPath)
     },_config.ignores)
-    //console.log(stylusCache)
+    //util.inspect(stylusCache,{colors:true})
     ///console.log("success:\tcache all stylus filepath and its importpath !!")
 }
 /**
@@ -96,7 +96,7 @@ function fileChangeCb(filePath) {
         for(var i in stylusCache) {
             stylusCache[i].forEach(function(aImport){
                 if(aImport === filePath.replace('.styl','')) {
-                    renderStylus(i + ".styl")
+                    fileChangeCb(i + ".styl") //递归编译
                 }
             })
         }
