@@ -7,22 +7,26 @@ var path = require('path')
  * @param {Array || Ignore} 要忽略的文件名
  */
 function ls(dir, cb, ignorePath){
-    dir = fs.realpathSync(dir)
-    fs.readdirSync(dir).forEach(function(item){
-        var realpath = path.join(dir, item)
-        //??????
-        if(ignorePath) {
-            for(var i= 0,len=ignorePath.length; i<len; i++) {
-                if(ignorePath[i] === item) { //todo
-                    return
+    try {
+        dir = fs.realpathSync(dir)
+        fs.readdirSync(dir).forEach(function(item){
+            var realpath = path.join(dir, item)
+            //??????
+            if(ignorePath) {
+                for(var i= 0,len=ignorePath.length; i<len; i++) {
+                    if(ignorePath[i] === item) { //todo
+                        return
+                    }
                 }
             }
-        }
-        cb(realpath)
-        if(fs.statSync(realpath).isDirectory()) {
-            ls(realpath, cb, ignorePath)
-        }
-    })
+            cb(realpath)
+            if(fs.statSync(realpath).isDirectory()) {
+                ls(realpath, cb, ignorePath)
+            }
+        })
+    }catch(err) {
+        console.log("catch err: " + err)
+    }
 }
 
 exports.ls = ls

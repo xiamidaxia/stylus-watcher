@@ -29,7 +29,7 @@ function renderStylus(aPath) {
                 .set('filename', aPath)
                 .include(nib.path)
                 //.import('nib')
-                .import(_config.configPath)
+                .import(fs.realpathSync(_config.configPath))
                 .render(function(err, cssStr){
                     if(err){
                         console.log(err.name);
