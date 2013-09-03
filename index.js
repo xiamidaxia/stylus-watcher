@@ -114,23 +114,27 @@ function watchAllDir() {
  * 监听目录下变化的文件，不包含子目录
  */
 function watchDir(dirPath, cb) {
-    console.log('watch dir: \t' + dirPath)
-    watchDirCache.push(dirPath)
-    fs.watch(dirPath, function(event, filename){
-        if(!filename) return
-        var filePath = path.join(dirPath, filename)
-        fs.stat(filePath, function(err,states) {
-            if(err) return //截断
-            if(!states.isDirectory()) {
-                //console.log(event, filePath)
-                cb(filePath)
-            }else{
-                if(watchDirCache.indexOf(filePath) == -1) { //未被监听
-                    watchDir(filePath, cb)
+    try {
+        console.log('watch dir: \t' + dirPath)
+        watchDirCache.push(dirPath)
+        fs.watch(dirPath, function(event, filename){
+            if(!filename) return
+            var filePath = path.join(dirPath, filename)
+            fs.stat(filePath, function(err,states) {
+                if(err) return //截断
+                if(!states.isDirectory()) {
+                    //console.log(event, filePath)
+                    cb(filePath)
+                }else{
+                    if(watchDirCache.indexOf(filePath) == -1) { //未被监听
+                        watchDir(filePath, cb)
+                    }
                 }
-            }
+            })
         })
-    })
+    } catch(err) {
+        console.log(err)
+    }
 }
 /**
  * 监听config文件，config文件改变时候编译所有
