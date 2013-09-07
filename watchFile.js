@@ -46,32 +46,36 @@ var D = {
  */
 function renderStylus(filePath){
     var cssFile = filePath.replace(/\.styl$/, '.css'),
+        process,
         data;
 
     D.log('+', filePath);
 
     data = fs.readFileSync(filePath);
 
-    stylus(data.toString())
+    process = stylus(data.toString())
         .set('filename', filePath)
-        .set('paths', gConfig.paths)
-        .include(require('nib').path)
-        .import(fs.realpathSync('../ky.webapp/webapp/static/common/config.styl'))
-        .render(function (err, cssStr){
-            if(err){
-                D.log('*', cssFile);
-                console.log(err.name);
-                console.log(err.message);
-                return;
-            }
+        .set('paths', gConfig.paths);
 
-            fs.writeFile(cssFile, cssStr, function (err){
-                if(err)
-                    throw err
+    gConfig.imports.forEach(function(stylPath){
+        process.import(stylPath);
+    });
 
-                D.log('-', cssFile);
-            })
-        });
+    process.render(function (err, cssStr){
+        if(err){
+            D.log('*', cssFile);
+            console.log(err.name);
+            console.log(err.message);
+            return;
+        }
+
+        fs.writeFile(cssFile, cssStr, function (err){
+            if(err)
+                throw err
+
+            D.log('-', cssFile);
+        })
+    });
 }
 
 /**
@@ -229,18 +233,38 @@ function initOfFile(filePath, actions){
  */
 function loadConfig(filePath){
     var config,
-        data;
+        paths;
 
     try{
-        data = fs.readFileSync(filePath);
-        config = JSON.parse(data.toString());
-
-        if(!config.sources || !config.sources[0]){
-            config.sources = ['.'];
-        }
+        config = JSON.parse(
+            fs.readFileSync(filePath)
+                .toString()
+            );
     }catch(e){
         D.log('加载配置文件失败\n\t', filePath);
+        config = {};
     }
+
+    config.ignores = config.ignores || ['.git', 'sea-modules', 'node-modules'];
+    config.sources = config.sources || [''];
+
+    config.paths = (config.paths || [])
+        .map(function (p, i){
+            try{
+                var t = require(p);
+
+                if(t && t.path){
+                    return t.path;
+                }
+            }catch(e){}
+
+            return path.resolve(p);
+        });
+
+    config.imports = (config.imports || [])
+        .map(function (p, i){
+            return path.resolve(p);
+        });
 
     return config;
 }
@@ -252,7 +276,10 @@ function init(){
     gConfig = loadConfig('config2.json');
 
     gConfig.sources.forEach(function (watchPath){
-        initOfFile(watchPath, {'.styl': onStylChange});
+        initOfFile(
+            path.resolve(watchPath),
+            {'.styl': onStylChange}
+        );
     });
 
     return;

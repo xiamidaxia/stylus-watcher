@@ -1,5 +1,4 @@
 {
-    "sources": ["../ky.webapp/webapp/static"],
     "ignores": [
         ".git",
         "sea-modules",
@@ -9,5 +8,13 @@
         "libs",
         "tools"
     ],
-    "paths": []
+    "sources": [
+        "../ky.webapp/webapp/static"
+    ],
+    "paths": [
+        "nib"
+    ],
+    "imports": [
+        "../ky.webapp/webapp/static/common/config.styl"
+    ]
 }
