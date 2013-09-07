@@ -1,0 +1,13 @@
+{
+    "sources": ["../ky.webapp/webapp/static"],
+    "ignores": [
+        ".git",
+        "sea-modules",
+        "node-modules",
+        "zz",
+        "diy",
+        "libs",
+        "tools"
+    ],
+    "paths": []
+}
