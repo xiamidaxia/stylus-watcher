@@ -2,6 +2,24 @@ var path = require('path'),
     fs = require('fs'),
     stylus = require('stylus');
 
+var DEFAULT_CONFIG = {
+    // 忽略的文件/文件夹
+    ignores: [
+        '.git',
+        'node_modules',
+        'sea-modules',
+        '.build',
+        'dist'
+    ],
+    // 需要编译的目录
+    sources: ['.'],
+    // 导入 styl
+    paths: ['nib'],
+    imports: [],
+    // 编译压缩
+    compresss: false
+};
+
 var gConfig,
     gNeedRenders = [],  // 待渲染文件队列
     gRendingNum = 0,    // 正在渲染的文件数
@@ -242,7 +260,7 @@ function loadConfig(filePath){
         config = require(path.join(__dirname, filePath));
     }catch(e){
         D.log('加载配置文件失败\n\t', filePath);
-        config = {};
+        config = DEFAULT_CONFIG;
     }
 
     config.ignores = config.ignores || ['.git', 'sea-modules', 'node-modules'];
