@@ -55,7 +55,8 @@ function renderStylus(filePath){
 
     process = stylus(data.toString())
         .set('filename', filePath)
-        .set('paths', gConfig.paths);
+        .set('paths', gConfig.paths)
+        .set('compress', gConfig.compress);
 
     gConfig.imports.forEach(function(stylPath){
         process.import(stylPath);
@@ -171,13 +172,15 @@ function watchDirOfType(dirPath, actions){
     gWatchCache.push(dirPath);
     D.log('w', dirPath);
 
-    fs.watch(dirPath, function (e, filename){
+    var watcher = fs.watch(dirPath, function (e, filename){
         if(!filename) return;
 
         var filePath = path.join(dirPath, filename);
 
         // D.log('change', filePath);
         initOfFile(filePath, actions);
+    }).on('error', function(e){
+        watcher.close();
     });
 }
 
@@ -236,10 +239,7 @@ function loadConfig(filePath){
         paths;
 
     try{
-        config = JSON.parse(
-            fs.readFileSync(filePath)
-                .toString()
-            );
+        config = require(path.join(__dirname, filePath));
     }catch(e){
         D.log('加载配置文件失败\n\t', filePath);
         config = {};
