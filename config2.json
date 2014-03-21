@@ -5,6 +5,8 @@
         "sea-modules",
         "node_modules",
         "zz",
+	".build",
+	"dist",
         "libs",
         "tools"
     ],
@@ -16,5 +18,6 @@
     ],
     "imports": [
         "../kyw-project/webapp/static/common/config.styl"
-    ]
+    ],
+    "compress": false
 }
