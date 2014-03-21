@@ -1,20 +1,20 @@
 {
     "ignores": [
         ".git",
+        ".idea",
         "sea-modules",
-        "node-modules",
+        "node_modules",
         "zz",
-        "diy",
         "libs",
         "tools"
     ],
     "sources": [
-        "../ky.webapp/webapp/static"
+        "../kyw-project/webapp/static"
     ],
     "paths": [
         "nib"
     ],
     "imports": [
-        "../ky.webapp/webapp/static/common/config.styl"
+        "../kyw-project/webapp/static/common/config.styl"
     ]
 }
