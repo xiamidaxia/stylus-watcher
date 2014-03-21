@@ -1,0 +1,17 @@
+{
+    // 忽略的文件/文件夹
+    "ignores": [
+        ".git",
+        "node_modules",
+        "sea-modules",
+        ".build",
+        "dist"
+    ],
+    // 需要编译的目录
+    "sources": ["."],
+    // 导入 styl
+    "paths": ["nib"],
+    "imports": [],
+    // 编译压缩
+    "compresss": false
+}
