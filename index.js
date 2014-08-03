@@ -1,157 +1,112 @@
 var path = require('path')
     ,fs = require('fs')
-    ,ls = require('./utils').ls
-    ,_config //配置json
-    ,stylus = require('stylus')
-    ,nib = require('nib')
-    ,spawn = require('child_process').spawn
-    ,stylusCache = {} //缓存 stylus文件及对应的import依赖
-    ,watchDirCache = [] //所有已经监听的文件夹
+    ,u = require('./utils')
+    ,_config = require('./config')
+    ,exec = require('child_process').exec
     ,util = require('util')
 
-//read config file
+var _watchDirCache = []
 
-function renderAllStylus() {
-    ls(_config.projectPath, function(relPath){
-        if(path.extname(relPath) === '.styl') {
-            renderStylus(relPath, _config.configPath)
-        }
-    },_config.ignores)
-}
-
-function renderStylus(aPath) {
-    if(path.extname(aPath) === '.styl') {
-        var cssFilePath = path.dirname(aPath) + path.sep + path.basename(aPath, '.styl') + ".css"
-        var data = fs.readFileSync(aPath)
-        //fs.readFile(aPath, function(err, data) {
-        //   if(err) return //截断 todo
-            stylus(data.toString())
-                .set('filename', aPath)
-                .include(nib.path)
-                //.import('nib')
-                .import(fs.realpathSync(_config.configPath))
-                .render(function(err, cssStr){
-                    if(err){
-                        console.log(err.name);
-                        console.log(err.message)
-                        return;
-                    }
-                    fs.writeFile(cssFilePath, cssStr, function(err){
-                        if(err) throw err
-                        //console.log('compile ' + (new Date().toISOString().replace(/.*T|Z/g,'')) + ' ' + aPath)
-                        util.log('compile ' + aPath)
-                    })
-                })
-        //})
-    }
-}
-/**
- * 缓存所有stylus文件路径及其import依赖文件路径
- */
-function cacheAllStylus() {
-    ls(_config.projectPath, function(relPath){
-        cacheStylus(relPath)
-    },_config.ignores)
-    //util.inspect(stylusCache,{colors:true})
-    ///console.log("success:\tcache all stylus filepath and its importpath !!")
-}
-/**
- * @param {String} relPath
- */
-function cacheStylus(relPath) {
-    var importReg = /@import\s*"\s*([^\"]*)\s*"/g
-        ,importArr = []
-        ,cur
-        ,curPath
-        ,data
-        ,curDir = path.dirname(relPath)  //当前文件目录
-        ,configPath = _config.configPath //stylus config文件
-    if(path.extname(relPath) !== '.styl') return
-
-    data = fs.readFileSync(relPath)
-
-    while(cur = importReg.exec(data)) {
-        curPath = path.resolve(curDir, cur[1]).replace('.styl','')
-        if(curPath !== configPath.replace('.styl','')) { //过滤config文件
-            importArr.push(curPath)
-        }
-    }
-    stylusCache[relPath.replace('.styl','')] = importArr
-}
-
-function getConfig() {
-    var config
-        ,data
-    data = fs.readFileSync("./config.json")
-    config = JSON.parse(data.toString().replace(/\s/g, ""))
-    config.projectPath = path.normalize(config.projectPath)
-    config.configPath = path.normalize(config.configPath)
-    return config
-}
-
-function fileChangeCb(filePath) {
-    cacheAllStylus() //更新cache
-    if(path.extname(filePath) === ".styl") {
-        renderStylus(filePath) //编译当前文件
-        for(var i in stylusCache) {
-            stylusCache[i].forEach(function(aImport){
-                if(aImport === filePath.replace('.styl','')) {
-                    fileChangeCb(i + ".styl") //递归编译
+function killProject(cb) {
+    //var projectCmd = _config.exc + " " + _config.exc_params.join(' ').trim()
+    u.getPid(_config.exc, function(pids){
+        if (pids.length == 0 ) cb && cb()
+        else {
+            pids.forEach(function(pid){
+                try {
+                    process.kill(pid, "SIGHUP")
+                    u.log("process " + pid + " killed...")
+                } catch (err) {
+                    console.log("process.kill error: ", err)
                 }
             })
+            cb && cb()
         }
-    }
-}
-function watchAllDir() {
-    watchDir(_config.projectPath, fileChangeCb)
-    ls(_config.projectPath, function(realPath){
-        if(fs.statSync(realPath).isDirectory()) {
-            watchDir(realPath, fileChangeCb)
-        }
-    }, _config.ignores)
-}
-/**
- * 监听目录下变化的文件，不包含子目录
- */
-function watchDir(dirPath, cb) {
-    try {
-        console.log('watch dir: \t' + dirPath)
-        watchDirCache.push(dirPath)
-        fs.watch(dirPath, function(event, filename){
-            if(!filename) return
-            var filePath = path.join(dirPath, filename)
-            fs.stat(filePath, function(err,states) {
-                if(err) return //截断
-                if(!states.isDirectory()) {
-                    //console.log(event, filePath)
-                    cb(filePath)
-                }else{
-                    if(watchDirCache.indexOf(filePath) == -1) { //未被监听
-                        watchDir(filePath, cb)
-                    }
-                }
-            })
-        })
-    } catch(err) {
-        console.log(err)
-    }
-}
-/**
- * 监听config文件，config文件改变时候编译所有
- */
-function watchConfig() {
-    fs.watchFile(_config.configPath, function(){
-        console.log('change config styl, ready to compile all stylus ...')
-        renderAllStylus()
     })
 }
-function init() {
-    _config = getConfig()
-    cacheAllStylus()
-    watchAllDir()
-    watchConfig()
-    renderAllStylus() //初始化时候先编译所有
-    //watchDir(_config.projectPath)
-    return //todo
+
+function isIgnorePath(path) {
+    var isIgnore = false
+    _config.ignores.forEach(function(item){
+        if (item.test(path)) isIgnore = true
+    })
+    return isIgnore
+}
+
+function startProject () {
+    var isStart = false
+    //u.log("process starting...")
+    //var _exc = spawn(_config.exc, _config.exc_params, {
+    //    "cwd": path.resolve(_config.exc_cwd)
+    //})
+    var _exc = exec(_config.exc, {
+        "cwd": path.resolve(_config.exc_cwd)
+    })
+    _exc.stdout.on('data', function(data){
+        if (!isStart) {
+            u.log('process ' + _exc.pid + ' started...')
+            console.log('=====================================================')
+        }
+        console.log(data.toString())
+        isStart = true
+    })
+    _exc.stderr.on('data', function(data){
+        //u.log('start process ' + _config.exc +' err: ' + data, 'red')
+        u.log(data,'red')
+    })
+/*    _exc.on('close', function(code){
+        u.log('process close: ' + code)
+    })*/
+}
+
+function _fileChangeCb(filePath) {
+    if (!isIgnorePath(filePath)) {
+        console.log('=====================================================')
+        u.log('file change: ' + filePath, "cyan")
+        killProject(function(){startProject()})
+    }
+}
+
+function _watchAllDir () {
+    _watchDir(_config.path, _fileChangeCb)
+    u.ls(_config.path, function(realPath){
+        if(fs.statSync(realPath).isDirectory()) {
+            _watchDir(realPath, _fileChangeCb)
+        }
+    }, _config.ignores)
+
+}
+
+function _watchDir(dirPath, cb) {
+    u.log(dirPath, "blue")
+    _watchDirCache.push(dirPath)
+    fs.watch(dirPath, function(event, filename){
+        if(!filename) return
+        var filePath = path.join(dirPath, filename)
+        fs.stat(filePath, function(err,states) {
+            if(err) return //截断
+            if(!states.isDirectory()) {
+                //console.log(event, filePath)
+                cb(filePath)
+            }else{
+                if(_watchDirCache.indexOf(filePath) == -1) { //未被监听
+                    _watchDir(filePath, cb)
+                }
+            }
+        })
+    })
+
+}
+
+function preConfig() {
+    _config.ignores = _config.ignores.map(function(item){
+        return new RegExp(item)
+    })
+}
+
+function init () {
+    preConfig()
+    killProject(function(){startProject()})
+    _watchAllDir()
 }
 init()

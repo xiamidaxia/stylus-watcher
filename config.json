@@ -1,5 +1,0 @@
-{
-	"projectPath": "../ky.diy/app",
-	"configPath": "../ky.diy/app/common/config.styl",
-	"ignores": [".git", ".idea","config.styl","node_modules","sea-modules","libs","tools"]
-}
