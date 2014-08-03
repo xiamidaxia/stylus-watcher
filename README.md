@@ -1,4 +1,3 @@
-stylus-wacher
-===============
+#file-watcher
 
-Listen the webfront project codes when changed,  reload the project in browser... 
+a simple file watcher
